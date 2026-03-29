@@ -1,0 +1,77 @@
+services:
+  backend:
+    build:
+      context: ../../
+      dockerfile: deploy/app/backend/Dockerfile
+    container_name: rag-backend
+    restart: unless-stopped
+    env_file: ../../.env
+    environment:
+      APP_HOST: "0.0.0.0"
+      APP_PORT: "8000"
+      POSTGRES_HOST: postgres
+      QDRANT_HOST: qdrant
+      REDIS_URL: redis://redis:6379/0
+    volumes:
+      - uploads_data:/app/uploads
+    depends_on:
+      - postgres
+      - qdrant
+      - redis
+    networks:
+      - rag-network
+
+  frontend:
+    build:
+      context: ../../
+      dockerfile: deploy/app/frontend/Dockerfile
+    container_name: rag-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - rag-network
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: rag-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-ragdb}
+      POSTGRES_USER: ${POSTGRES_USER:-raguser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ragpassword}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - rag-network
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: rag-qdrant
+    restart: unless-stopped
+    volumes:
+      - qdrant_storage:/qdrant/storage
+    networks:
+      - rag-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: rag-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - rag-network
+
+volumes:
+  uploads_data:
+  postgres_data:
+  qdrant_storage:
+  redis_data:
+
+networks:
+  rag-network:
+    driver: bridge
