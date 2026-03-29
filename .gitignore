@@ -54,3 +54,4 @@ logs/
 .coverage
 htmlcov/
 .pytest_cache/
+.gitnexus
