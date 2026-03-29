@@ -1,7 +1,6 @@
 from collections.abc import AsyncGenerator
 
 import structlog
-from openai import AsyncOpenAI
 
 from backend.config.settings import get_settings
 from backend.ingestion.embedder import get_openai_client

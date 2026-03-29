@@ -1,7 +1,7 @@
 import json
 
 import structlog
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 
 from backend.api.dependencies import get_session_id

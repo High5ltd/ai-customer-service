@@ -3,7 +3,6 @@ from pathlib import Path
 
 import structlog
 from qdrant_client.models import PointStruct
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.config.settings import get_settings
 from backend.db.models.document import Document

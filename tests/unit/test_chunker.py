@@ -1,4 +1,4 @@
-from backend.ingestion.chunker import Chunk, chunk_pages
+from backend.ingestion.chunker import chunk_pages
 from backend.ingestion.loader import Page
 
 

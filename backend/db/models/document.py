@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime
 
 from sqlalchemy import DateTime, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
@@ -21,11 +21,11 @@ class Document(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(datetime.UTC),
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(datetime.UTC),
+        onupdate=lambda: datetime.now(datetime.UTC),
     )

@@ -20,9 +20,7 @@ class DocumentRepository:
         return result.scalar_one_or_none()
 
     async def list_all(self) -> list[Document]:
-        result = await self._session.execute(
-            select(Document).order_by(Document.created_at.desc())
-        )
+        result = await self._session.execute(select(Document).order_by(Document.created_at.desc()))
         return list(result.scalars().all())
 
     async def update_status(

@@ -4,10 +4,28 @@
 
 set -euo pipefail
 
+REPO_ROOT=$(git rev-parse --show-toplevel)
+cd "$REPO_ROOT"
+
+# Hooks get a minimal PATH (no activated venv, often no Homebrew / pip --user).
+export PATH="${REPO_ROOT}/.venv/bin:${HOME}/.local/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:${PATH}"
+
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 CYAN='\033[0;36m'
 RESET='\033[0m'
+
+run_ruff() {
+  if command -v ruff >/dev/null 2>&1; then
+    ruff "$@"
+  elif command -v poetry >/dev/null 2>&1; then
+    poetry run ruff "$@"
+  else
+    echo -e "${RED}✘${RESET} No ruff or poetry on PATH (after adding .venv, ~/.local/bin, Homebrew)." >&2
+    echo "  Install deps: poetry install   OR use a project .venv with README steps." >&2
+    return 1
+  fi
+}
 
 pass() { echo -e "${GREEN}✔ $1${RESET}"; }
 fail() { echo -e "${RED}✘ $1${RESET}"; exit 1; }
@@ -20,11 +38,11 @@ STAGED_FE=$(git diff --cached --name-only --diff-filter=ACM | grep '^frontend/.*
 if [ -n "$STAGED_PY" ]; then
   section "ruff lint"
   # shellcheck disable=SC2086
-  poetry run ruff check $STAGED_PY || fail "ruff lint failed — run: poetry run ruff check --fix"
+  run_ruff check $STAGED_PY || fail "ruff lint failed — run: .venv/bin/ruff check --fix (or poetry run ruff check --fix)"
 
   section "ruff format"
   # shellcheck disable=SC2086
-  poetry run ruff format --check $STAGED_PY || fail "ruff format failed — run: poetry run ruff format"
+  run_ruff format --check $STAGED_PY || fail "ruff format failed — run: .venv/bin/ruff format"
 
   pass "Python checks passed"
 fi

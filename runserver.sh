@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$REPO_ROOT"
+# Prefer Poetry from the project venv (see README — avoid system-wide pip installs)
+if [ -x "$REPO_ROOT/.venv/bin/poetry" ]; then
+    export PATH="$REPO_ROOT/.venv/bin:$PATH"
+fi
+
 # ─── Colors ───────────────────────────────────────────────────────────────────
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -40,12 +47,19 @@ if ! command -v docker &>/dev/null; then
     exit 1
 fi
 if ! command -v poetry &>/dev/null; then
-    log_error "poetry is not installed. Run: pip install poetry"
+    log_error "Poetry not found. Use a project venv (not a global install), for example:"
+    log_error "  python3.11 -m venv .venv && source .venv/bin/activate && pip install poetry"
+    log_error "  poetry config virtualenvs.in-project true && poetry install"
     exit 1
 fi
 if ! command -v pnpm &>/dev/null; then
-    log_error "pnpm is not installed. Run: npm install -g pnpm"
-    exit 1
+    if command -v corepack &>/dev/null; then
+        log_info "pnpm not on PATH — enabling via Corepack..."
+        corepack enable && corepack prepare pnpm@latest --activate
+    else
+        log_error "pnpm not found. With Node.js 20+: corepack enable && corepack prepare pnpm@latest --activate"
+        exit 1
+    fi
 fi
 
 # ─── Create uploads dir ───────────────────────────────────────────────────────

@@ -1,6 +1,7 @@
 """Integration tests — require running PostgreSQL, Qdrant, Redis, and a valid OPENAI_API_KEY."""
 
 import io
+
 import pytest
 
 

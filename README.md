@@ -129,11 +129,22 @@ RAG/
 | Node.js | 20+ |
 | pnpm | 9+ |
 
-Install Poetry and pnpm if needed:
+**Python / Poetry (project venv — do not install into the system Python):**
 ```bash
-pip install poetry
-npm install -g pnpm
+python3.11 -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
+pip install -U pip poetry
+poetry config virtualenvs.in-project true
+poetry install
 ```
+After the first setup, activate `.venv` in each terminal before running `poetry` commands.
+
+**pnpm (via Corepack — no global npm install):**
+```bash
+corepack enable
+corepack prepare pnpm@latest --activate
+```
+Requires Node.js 20+.
 
 ### 1. Configure environment
 

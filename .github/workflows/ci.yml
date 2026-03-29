@@ -12,22 +12,22 @@ env:
   FRONTEND_IMAGE: ghcr.io/${{ github.repository_owner }}/rag-frontend
 
 jobs:
-  # ── Job 1: Lint & Test ──────────────────────────────────────────────────────
-  test:
-    name: Lint & Test
+  # ── Job 1a: Ruff lint & format (parallel) ──────────────────────────────────
+  lint:
+    name: Lint (ruff)
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: Install Poetry
-        run: pip install --no-cache-dir poetry==1.8.3
+      - name: Install Poetry (venv)
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install --no-cache-dir poetry==1.8.3
+          echo "$GITHUB_WORKSPACE/.venv/bin" >> "$GITHUB_PATH"
 
       - name: Install dependencies
         run: poetry install --no-interaction
@@ -38,21 +38,60 @@ jobs:
       - name: Ruff format check
         run: poetry run ruff format --check backend/ tests/
 
-      - name: Run tests
-        run: poetry run pytest --cov=backend --cov-report=term-missing -q
+  # ── Job 1b: Pytest (parallel) ───────────────────────────────────────────────
+  test:
+    name: Test (pytest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
-  # ── Job 2: Build & Push images ─────────────────────────────────────────────
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Poetry (venv)
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install --no-cache-dir poetry==1.8.3
+          echo "$GITHUB_WORKSPACE/.venv/bin" >> "$GITHUB_PATH"
+
+      - name: Install dependencies
+        run: poetry install --no-interaction
+
+      - name: Run unit tests
+        run: poetry run pytest tests/unit/ --cov=backend --cov-report=term-missing -q
+
+  # ── Job 1c: TypeScript type check (parallel) ────────────────────────────────
+  tsc:
+    name: Type check (tsc)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install pnpm
+        run: corepack enable && corepack prepare pnpm@latest --activate
+
+      - name: Install dependencies
+        run: cd frontend && pnpm install --frozen-lockfile
+
+      - name: TypeScript type check
+        run: cd frontend && pnpm tsc --noEmit
+
+  # ── Job 2: Build & Push images (after all checks pass) ─────────────────────
   build-push:
     name: Build & Push
     runs-on: ubuntu-latest
-    needs: test
+    needs: [lint, test, tsc]
     permissions:
       contents: read
       packages: write
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3

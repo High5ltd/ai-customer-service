@@ -28,9 +28,7 @@ def build_context(results: list[SearchResult]) -> RetrievalContext:
     citations: list[Citation] = []
 
     for i, result in enumerate(results, start=1):
-        parts.append(
-            f"[{i}] (Source: {result.filename}, Page {result.page_number})\n{result.text}"
-        )
+        parts.append(f"[{i}] (Source: {result.filename}, Page {result.page_number})\n{result.text}")
         citations.append(
             Citation(
                 index=i,
