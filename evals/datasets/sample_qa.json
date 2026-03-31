@@ -1,0 +1,19 @@
+[
+  {
+    "id": "q1",
+    "question": "Replace this with a real question answerable from your documents.",
+    "ground_truth_answer": "Replace this with the expected answer.",
+    "relevant_chunk_ids": [
+      "replace-with-actual-document-uuid__0",
+      "replace-with-actual-document-uuid__1"
+    ]
+  },
+  {
+    "id": "q2",
+    "question": "Another example question.",
+    "ground_truth_answer": "Another expected answer.",
+    "relevant_chunk_ids": [
+      "replace-with-actual-document-uuid__3"
+    ]
+  }
+]

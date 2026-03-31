@@ -55,3 +55,6 @@ logs/
 htmlcov/
 .pytest_cache/
 .gitnexus
+
+# Eval reports (generated output, not source)
+evals/reports/*.json
