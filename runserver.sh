@@ -120,14 +120,14 @@ poetry run alembic -c alembic/alembic.ini upgrade head
 log_info "Migrations complete"
 
 # ─── Install frontend dependencies ────────────────────────────────────────────
-if [ ! -d frontend/node_modules ]; then
+if [ ! -d UI/node_modules ]; then
     log_info "Installing frontend dependencies..."
-    (cd frontend && pnpm install --frozen-lockfile)
+    (cd UI && pnpm install --frozen-lockfile)
 fi
 
 # ─── Start backend ────────────────────────────────────────────────────────────
 log_info "Starting FastAPI backend on port $APP_PORT..."
-poetry run uvicorn backend.main:app \
+poetry run uvicorn RAG.main:app \
     --host "${APP_HOST:-0.0.0.0}" \
     --port "$APP_PORT" \
     --reload \
@@ -136,7 +136,7 @@ BACKEND_PID=$!
 
 # ─── Start frontend ───────────────────────────────────────────────────────────
 log_info "Starting React frontend on port 5173..."
-(cd frontend && pnpm dev) &
+(cd UI && pnpm dev) &
 FRONTEND_PID=$!
 
 # ─── Print URLs ───────────────────────────────────────────────────────────────

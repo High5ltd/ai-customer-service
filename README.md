@@ -55,7 +55,7 @@ RAG/
 ├── docker-compose.yml            # Databases ONLY (Qdrant, PostgreSQL, Redis)
 ├── runserver.sh                  # One-command startup script
 │
-├── backend/
+├── RAG/
 │   ├── main.py                   # FastAPI app + lifespan
 │   ├── config/
 │   │   └── settings.py           # Pydantic BaseSettings (reads .env)
@@ -90,7 +90,7 @@ RAG/
 │       ├── models/document.py    # ORM model
 │       └── repositories/         # CRUD layer
 │
-├── frontend/
+├── UI/
 │   └── src/
 │       ├── api/                  # axios client + SSE chat handler
 │       ├── components/
@@ -108,8 +108,8 @@ RAG/
 │
 └── deploy/
     ├── app/                      # Dockerfiles + docker-compose.app.yml (staging/prod)
-    │   ├── backend/Dockerfile    # Multi-stage Python image
-    │   └── frontend/Dockerfile   # Node build → Nginx
+    │   ├── RAG/Dockerfile    # Multi-stage Python image
+    │   └── UI/Dockerfile    # Node build → Nginx
     └── infra/                    # Production-tuned infra
         ├── docker-compose.infra.yml
         └── k8s/                  # Kubernetes manifests (stubs)
@@ -287,13 +287,13 @@ docker compose up -d
 ```bash
 poetry install
 poetry run alembic -c alembic/alembic.ini upgrade head
-poetry run uvicorn backend.main:app --reload
+poetry run uvicorn RAG.main:app --reload
 ```
 
 ### Run frontend only
 
 ```bash
-cd frontend
+cd UI
 pnpm install
 pnpm dev
 ```

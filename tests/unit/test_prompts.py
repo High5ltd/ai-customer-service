@@ -1,4 +1,4 @@
-from backend.generation.prompts import build_messages
+from RAG.generation.prompts import build_messages
 
 
 def test_build_messages_no_history():

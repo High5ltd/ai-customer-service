@@ -18,8 +18,8 @@ import json
 from datetime import UTC, datetime
 from pathlib import Path
 
-from backend.ingestion.embedder import embed_text
-from backend.retrieval import reranker, searcher
+from RAG.ingestion.embedder import embed_text
+from RAG.retrieval import reranker, searcher
 from evals.retrieval.metrics import chunk_id, compute_retrieval_metrics
 
 

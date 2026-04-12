@@ -1,5 +1,5 @@
-from backend.ingestion.chunker import chunk_pages
-from backend.ingestion.loader import Page
+from RAG.ingestion.chunker import chunk_pages
+from RAG.ingestion.loader import Page
 
 
 def make_pages(text: str) -> list[Page]:

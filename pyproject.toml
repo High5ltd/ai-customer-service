@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "RAG (Retrieval-Augmented Generation) service with FastAPI, OpenAI, Qdrant"
 authors = []
 readme = "README.md"
-packages = [{ include = "backend" }, { include = "evals" }]
+packages = [{ include = "RAG" }, { include = "evals" }]
 
 [tool.poetry.dependencies]
 python = "^3.11"

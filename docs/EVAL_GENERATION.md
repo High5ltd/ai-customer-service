@@ -190,5 +190,5 @@ question
 | Symptom | What to try |
 |---------|-------------|
 | Low faithfulness (hallucination) | Strengthen the system prompt — emphasize "answer only from context"; use a more capable model |
-| Low answer relevance | Revise the prompt template in `backend/generation/prompts.py`; check that retrieval is returning relevant context |
+| Low answer relevance | Revise the prompt template in `RAG/generation/prompts.py`; check that retrieval is returning relevant context |
 | Low citation precision | Verify `response_parser` is extracting citations correctly; improve reranking so relevant chunks rank higher |

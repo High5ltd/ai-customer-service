@@ -2,7 +2,7 @@ services:
   backend:
     build:
       context: ../../
-      dockerfile: backend/Dockerfile
+      dockerfile: RAG/Dockerfile
     container_name: rag-backend
     restart: unless-stopped
     env_file: ../../.env
@@ -24,7 +24,7 @@ services:
   frontend:
     build:
       context: ../../
-      dockerfile: frontend/Dockerfile
+      dockerfile: UI/Dockerfile
     container_name: rag-frontend
     restart: unless-stopped
     ports:

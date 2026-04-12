@@ -6,9 +6,9 @@ from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
-from backend.config.settings import get_settings
-from backend.db.models.document import Document  # noqa: F401 — registers model
-from backend.db.postgres import Base
+from RAG.config.settings import get_settings
+from RAG.db.models.document import Document  # noqa: F401 — registers model
+from RAG.db.postgres import Base
 
 config = context.config
 settings = get_settings()

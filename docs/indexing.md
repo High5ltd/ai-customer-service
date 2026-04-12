@@ -52,7 +52,7 @@ File size limit: `MAX_FILE_SIZE_MB` (default **50 MB**).
 
 ## Pipeline Steps in Detail
 
-### 1. Load file — `backend/ingestion/loader.py`
+### 1. Load file — `RAG/ingestion/loader.py`
 
 `load_file(file_path, mime_type)` returns `list[Page]`.
 
@@ -67,7 +67,7 @@ class Page:
 - **DOCX**: uses `python-docx`; all paragraphs joined with `\n\n` → one `Page`.
 - **Text / others**: read as UTF-8; entire file → one `Page`.
 
-### 2. Chunk — `backend/ingestion/chunker.py`
+### 2. Chunk — `RAG/ingestion/chunker.py`
 
 `chunk_pages(pages, document_id, chunk_size, chunk_overlap)` returns `list[Chunk]`.
 
@@ -90,7 +90,7 @@ Splits on `\n\n` → `\n` → `. ` → ` ` → individual characters, in order o
 | `CHUNK_SIZE` | `512` | Maximum characters per chunk |
 | `CHUNK_OVERLAP` | `64` | Characters of overlap between consecutive chunks |
 
-### 3. Embed — `backend/ingestion/embedder.py`
+### 3. Embed — `RAG/ingestion/embedder.py`
 
 `embed_chunks(chunks, batch_size=100)` calls the OpenAI Embeddings API in batches.
 
@@ -103,7 +103,7 @@ Splits on `\n\n` → `\n` → `. ` → ` ` → individual characters, in order o
 
 `embed_text(text)` is the single-string variant used at query time.
 
-### 4. Upsert into Qdrant — `backend/ingestion/pipeline.py`
+### 4. Upsert into Qdrant — `RAG/ingestion/pipeline.py`
 
 Each chunk becomes one **Point** in Qdrant:
 

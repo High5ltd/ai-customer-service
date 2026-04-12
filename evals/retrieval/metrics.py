@@ -1,7 +1,7 @@
 import math
 from dataclasses import dataclass
 
-from backend.retrieval.searcher import SearchResult
+from RAG.retrieval.searcher import SearchResult
 from evals.utils import make_chunk_id
 
 

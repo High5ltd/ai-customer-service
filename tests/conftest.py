@@ -1,7 +1,7 @@
 import pytest
 from httpx import ASGITransport, AsyncClient
 
-from backend.main import app
+from RAG.main import app
 
 
 @pytest.fixture

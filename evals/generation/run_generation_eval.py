@@ -19,10 +19,10 @@ import json
 from datetime import UTC, datetime
 from pathlib import Path
 
-from backend.generation import llm_client, prompts, response_parser
-from backend.ingestion.embedder import embed_text
-from backend.retrieval import reranker, searcher
-from backend.retrieval.context_builder import build_context
+from RAG.generation import llm_client, prompts, response_parser
+from RAG.ingestion.embedder import embed_text
+from RAG.retrieval import reranker, searcher
+from RAG.retrieval.context_builder import build_context
 from evals.generation.metrics import compute_generation_metrics
 from evals.utils import make_chunk_id
 

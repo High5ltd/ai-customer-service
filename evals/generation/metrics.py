@@ -6,7 +6,7 @@ Uses the existing llm_client so no extra dependencies are needed.
 import json
 from dataclasses import dataclass
 
-from backend.generation import llm_client
+from RAG.generation import llm_client
 
 
 @dataclass
