@@ -1,7 +1,7 @@
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **RAG** (417 symbols, 848 relationships, 27 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **ai-customer-service** (467 symbols, 970 relationships, 32 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
 
@@ -17,7 +17,7 @@ This project is indexed by GitNexus as **RAG** (417 symbols, 848 relationships, 
 
 1. `gitnexus_query({query: "<error or symptom>"})` — find execution flows related to the issue
 2. `gitnexus_context({name: "<suspect function>"})` — see all callers, callees, and process participation
-3. `READ gitnexus://repo/RAG/process/{processName}` — trace the full execution flow step by step
+3. `READ gitnexus://repo/ai-customer-service/process/{processName}` — trace the full execution flow step by step
 4. For regressions: `gitnexus_detect_changes({scope: "compare", base_ref: "main"})` — see what your branch changed
 
 ## When Refactoring
@@ -56,10 +56,10 @@ This project is indexed by GitNexus as **RAG** (417 symbols, 848 relationships, 
 
 | Resource | Use for |
 |----------|---------|
-| `gitnexus://repo/RAG/context` | Codebase overview, check index freshness |
-| `gitnexus://repo/RAG/clusters` | All functional areas |
-| `gitnexus://repo/RAG/processes` | All execution flows |
-| `gitnexus://repo/RAG/process/{name}` | Step-by-step execution trace |
+| `gitnexus://repo/ai-customer-service/context` | Codebase overview, check index freshness |
+| `gitnexus://repo/ai-customer-service/clusters` | All functional areas |
+| `gitnexus://repo/ai-customer-service/processes` | All execution flows |
+| `gitnexus://repo/ai-customer-service/process/{name}` | Step-by-step execution trace |
 
 ## Self-Check Before Finishing
 
