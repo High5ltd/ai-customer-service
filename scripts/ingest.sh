@@ -48,3 +48,11 @@ echo "========================================"
 
 # --- Chạy Python ingestion ---
 $PYTHON src/ingestion/run_ingest.py "$@"
+
+# --- Hướng dẫn inspect output ---
+echo ""
+echo "Để đọc canonical output:"
+echo "  1 document:  jq '.' data/canonical/documents.jsonl | head -80"
+echo "  Tất cả:      jq -s '.' data/canonical/documents.jsonl | less"
+echo "  Chỉ titles:  jq -r '.title' data/canonical/documents.jsonl"
+echo "  Sections:    jq '.sections[] | {id: .section_id, heading: .heading_path[0], chars: .char_count}' data/canonical/documents.jsonl"
