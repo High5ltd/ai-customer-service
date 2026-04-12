@@ -37,11 +37,6 @@ alembic/versions/*.pyc
 Thumbs.db
 
 # Node / Frontend
-frontend/node_modules/
-frontend/.pnpm-store/
-frontend/dist/
-frontend/.env
-frontend/.env.local
 UI/node_modules/
 UI/.pnpm-store/
 UI/dist/

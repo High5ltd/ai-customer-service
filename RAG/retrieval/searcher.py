@@ -31,9 +31,9 @@ async def search(
             must=[FieldCondition(key="document_id", match=MatchAny(any=document_ids))]
         )
 
-    hits = await client.search(
+    response = await client.query_points(
         collection_name=settings.qdrant_collection,
-        query_vector=query_vector,
+        query=query_vector,
         limit=k,
         query_filter=query_filter,
         with_payload=True,
@@ -48,5 +48,5 @@ async def search(
             page_number=hit.payload.get("page_number", 1),
             filename=hit.payload.get("filename", ""),
         )
-        for hit in hits
+        for hit in response.points
     ]
