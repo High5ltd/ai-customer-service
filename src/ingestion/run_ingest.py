@@ -15,7 +15,7 @@ import sys
 from pathlib import Path
 
 # Đảm bảo import được khi chạy từ project root
-PROJECT_ROOT = Path(__file__).parent.parent
+PROJECT_ROOT = Path(__file__).parent.parent.parent  # src/ingestion/ → src/ → project root
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from src.ingestion.loaders.pdf_loader import load_pdf

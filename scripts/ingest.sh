@@ -15,17 +15,30 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 cd "$PROJECT_ROOT"
 
-# --- Kích hoạt virtual environment nếu có ---
-if [ -f ".venv/bin/activate" ]; then
-  source .venv/bin/activate
-elif [ -f "venv/bin/activate" ]; then
-  source venv/bin/activate
+# --- Tìm Python system ---
+if command -v python3 &>/dev/null; then
+  SYS_PYTHON=python3
+elif command -v python &>/dev/null; then
+  SYS_PYTHON=python
+else
+  echo "ERROR: Không tìm thấy python hoặc python3."
+  exit 1
 fi
 
-# --- Kiểm tra Python ---
-if ! command -v python &>/dev/null; then
-  echo "ERROR: python không tìm thấy. Hãy kích hoạt virtual environment trước."
-  exit 1
+# --- Tạo .venv nếu chưa có ---
+if [ ! -f ".venv/bin/activate" ]; then
+  echo "Tạo virtual environment tại .venv/ ..."
+  $SYS_PYTHON -m venv .venv
+fi
+
+# --- Kích hoạt .venv ---
+source .venv/bin/activate
+PYTHON=python
+
+# --- Cài dependencies nếu chưa có ---
+if ! python -c "import pypdf" &>/dev/null; then
+  echo "Cài pypdf ..."
+  pip install --quiet pypdf
 fi
 
 echo "========================================"
@@ -34,4 +47,4 @@ echo "  Project: $PROJECT_ROOT"
 echo "========================================"
 
 # --- Chạy Python ingestion ---
-python src/ingestion/run_ingest.py "$@"
+$PYTHON src/ingestion/run_ingest.py "$@"
