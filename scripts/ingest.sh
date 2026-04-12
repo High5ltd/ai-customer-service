@@ -15,13 +15,17 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 cd "$PROJECT_ROOT"
 
-# --- Tìm Python system ---
-if command -v python3 &>/dev/null; then
+# --- Tìm Python system (ưu tiên 3.13, tránh 3.14 chưa tương thích asyncpg) ---
+if command -v python3.13 &>/dev/null; then
+  SYS_PYTHON=python3.13
+elif command -v python3.12 &>/dev/null; then
+  SYS_PYTHON=python3.12
+elif command -v python3.11 &>/dev/null; then
+  SYS_PYTHON=python3.11
+elif command -v python3 &>/dev/null; then
   SYS_PYTHON=python3
-elif command -v python &>/dev/null; then
-  SYS_PYTHON=python
 else
-  echo "ERROR: Không tìm thấy python hoặc python3."
+  echo "ERROR: Không tìm thấy Python 3.11–3.13."
   exit 1
 fi
 

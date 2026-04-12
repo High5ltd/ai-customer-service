@@ -122,7 +122,7 @@ log_info "Migrations complete"
 # ─── Install frontend dependencies ────────────────────────────────────────────
 if [ ! -d UI/node_modules ]; then
     log_info "Installing frontend dependencies..."
-    (cd UI && pnpm install --frozen-lockfile)
+    (cd UI && pnpm install)
 fi
 
 # ─── Start backend ────────────────────────────────────────────────────────────

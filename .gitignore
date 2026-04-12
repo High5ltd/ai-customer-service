@@ -42,6 +42,16 @@ frontend/.pnpm-store/
 frontend/dist/
 frontend/.env
 frontend/.env.local
+UI/node_modules/
+UI/.pnpm-store/
+UI/dist/
+UI/.env
+UI/.env.local
+
+# Data pipeline (binary/generated — không commit)
+data/raw/
+data/staging/
+data/canonical/
 
 # Docker
 .docker/
