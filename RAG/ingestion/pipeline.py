@@ -12,6 +12,7 @@ from RAG.db.repositories.document_repo import DocumentRepository
 from RAG.ingestion.chunker import chunk_pages
 from RAG.ingestion.embedder import embed_chunks
 from RAG.ingestion.loader import load_file
+from RAG.ingestion.preprocessor import preprocess_pages
 
 log = structlog.get_logger()
 
@@ -45,6 +46,17 @@ async def ingest_document(
             pages = load_file(file_path, mime_type)
             if not pages:
                 raise ValueError("No text extracted from document")
+
+            # Preprocess pages: normalize, clean, remove headers/footers
+            pages = preprocess_pages(
+                pages,
+                min_page_length=settings.preprocess_min_page_length,
+                detect_headers_footers=settings.preprocess_detect_headers_footers,
+                header_footer_lines=settings.preprocess_header_footer_lines,
+            )
+            if not pages:
+                raise ValueError("No usable content after preprocessing")
+            log.info("Pages preprocessed", doc_id=doc_id, page_count=len(pages))
 
             # Chunk the pages
             chunks = chunk_pages(

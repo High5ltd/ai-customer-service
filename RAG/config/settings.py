@@ -49,6 +49,11 @@ class Settings(BaseSettings):
     retrieval_top_k: int = 5
     retrieval_min_score: float = 0.4
 
+    # Preprocessing
+    preprocess_min_page_length: int = 20
+    preprocess_detect_headers_footers: bool = True
+    preprocess_header_footer_lines: int = 2
+
     @property
     def postgres_dsn(self) -> str:
         return (
