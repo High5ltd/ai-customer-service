@@ -1,24 +1,113 @@
-name: CI
+name: CI - AI Customer Service
+run-name: ${{ github.event.pull_request.title || 'Deployment' }} ${{ github.ref_name }}
 
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
+    types: [opened, synchronize, reopened, closed]
   workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
   BACKEND_IMAGE: ghcr.io/${{ github.repository_owner }}/rag-backend
   FRONTEND_IMAGE: ghcr.io/${{ github.repository_owner }}/rag-frontend
+  # K8s repo — chỉnh theo org/repo thực tế (cần secret DEPLOY_PAT)
+  K8S_REPO: High5ltd/k8s
+  SERVICE_NAME_BACKEND: rag-backend
+  SERVICE_NAME_FRONTEND: rag-frontend
 
 jobs:
-  # ── Job 1a: Ruff lint & format (parallel) ──────────────────────────────────
-  lint:
-    name: Lint (ruff)
+  changes:
+    name: Check for File Changes
     runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'push' ||
+      github.event.pull_request.merged == true ||
+      (github.event_name == 'pull_request' && github.event.action != 'closed')
+    permissions:
+      pull-requests: read
+      contents: read
+    outputs:
+      rag: >-
+        ${{
+          github.event_name == 'workflow_dispatch' ||
+          github.event_name == 'push' ||
+          steps.filter.outputs.rag == 'true'
+        }}
+      ui: >-
+        ${{
+          github.event_name == 'workflow_dispatch' ||
+          github.event_name == 'push' ||
+          steps.filter.outputs.ui == 'true'
+        }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Filter paths
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            rag:
+              - 'RAG/**'
+              - 'tests/**'
+              - 'evals/**'
+              - 'src/**'
+              - 'pyproject.toml'
+              - 'poetry.lock'
+              - 'RAG/Dockerfile'
+              - '.github/workflows/**'
+            ui:
+              - 'UI/**'
+              - 'UI/Dockerfile'
+              - '.github/workflows/**'
+
+  secret-scan:
+    name: Secret Scanning
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'push' ||
+      github.event.pull_request.merged == true ||
+      (github.event_name == 'pull_request' && github.event.action != 'closed')
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: TruffleHog OSS
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.pull_request.merge_commit_sha && format('{0}^', github.event.pull_request.merge_commit_sha) || github.event.pull_request.base.sha || 'HEAD^' }}
+          head: ${{ github.event.pull_request.merge_commit_sha || github.event.pull_request.head.sha || 'HEAD' }}
+          extra_args: --debug --only-verified
+
+  test-rag:
+    name: Check (RAG) — ${{ matrix.task.name }}
+    runs-on: ubuntu-latest
+    needs: changes
+    if: >-
+      (github.event_name == 'workflow_dispatch' ||
+        github.event_name == 'push' ||
+        needs.changes.outputs.rag == 'true') &&
+      !(github.event_name == 'pull_request' && github.event.action == 'closed')
+    strategy:
+      fail-fast: false
+      matrix:
+        task:
+          - name: Ruff (lint)
+            command: poetry run ruff check RAG/ tests/
+          - name: Ruff (format)
+            command: poetry run ruff format --check RAG/ tests/
+          - name: Unit tests
+            command: poetry run pytest tests/unit/ --cov=RAG --cov-report=term-missing -q
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - uses: actions/setup-python@v5
         with:
@@ -33,41 +122,29 @@ jobs:
       - name: Install dependencies
         run: poetry install --no-interaction
 
-      - name: Ruff lint
-        run: poetry run ruff check RAG/ tests/
+      - name: Run ${{ matrix.task.name }}
+        run: ${{ matrix.task.command }}
 
-      - name: Ruff format check
-        run: poetry run ruff format --check RAG/ tests/
-
-  # ── Job 1b: Pytest (parallel) ───────────────────────────────────────────────
-  test:
-    name: Test (pytest)
+  test-ui:
+    name: Check (UI) — ${{ matrix.task.name }}
     runs-on: ubuntu-latest
+    needs: changes
+    if: >-
+      (github.event_name == 'workflow_dispatch' ||
+        github.event_name == 'push' ||
+        needs.changes.outputs.ui == 'true') &&
+      !(github.event_name == 'pull_request' && github.event.action == 'closed')
+    strategy:
+      fail-fast: false
+      matrix:
+        task:
+          - name: ESLint
+            command: pnpm run lint
+          - name: Types (TypeScript)
+            command: pnpm exec tsc --noEmit
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Install Poetry (venv)
-        run: |
-          python -m venv .venv
-          .venv/bin/pip install --no-cache-dir poetry==1.8.3
-          echo "$GITHUB_WORKSPACE/.venv/bin" >> "$GITHUB_PATH"
-
-      - name: Install dependencies
-        run: poetry install --no-interaction
-
-      - name: Run unit tests
-        run: poetry run pytest tests/unit/ --cov=RAG --cov-report=term-missing -q
-
-  # ── Job 1c: TypeScript type check (parallel) ────────────────────────────────
-  tsc:
-    name: Type check (tsc)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
@@ -77,71 +154,149 @@ jobs:
         run: corepack enable && corepack prepare pnpm@latest --activate
 
       - name: Install dependencies
-        run: cd UI && pnpm install --frozen-lockfile
+        working-directory: UI
+        run: pnpm install --frozen-lockfile
 
-      - name: TypeScript type check
-        run: cd UI && pnpm tsc --noEmit
+      - name: Run ${{ matrix.task.name }}
+        working-directory: UI
+        run: ${{ matrix.task.command }}
 
-  # ── Job 2: Build & Push images (after all checks pass) ─────────────────────
-  build-push:
-    name: Build & Push
+  # Gate: build-push không phụ thuộc test (PR merge/closed bỏ qua test giống mẫu)
+  deploy-gate:
+    name: Deploy Gate
     runs-on: ubuntu-latest
-    needs: [lint, test, tsc]
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
+    steps:
+      - run: echo "Ready for build/deploy (merge or manual trigger)"
+
+  build-push:
+    name: Build and Push Docker
+    runs-on: ubuntu-latest
+    needs: deploy-gate
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
     permissions:
       contents: read
       packages: write
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      image_backend: ${{ steps.version.outputs.image_backend }}
+      image_frontend: ${{ steps.version.outputs.image_frontend }}
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract version
+        id: version
+        env:
+          OWNER_LC: ${{ github.repository_owner }}
+        run: |
+          SHORT_SHA=$(echo ${{ github.event.pull_request.merge_commit_sha || github.sha }} | cut -c1-7)
+          VERSION="staging-${SHORT_SHA}"
+          OWNER=$(echo "$OWNER_LC" | tr '[:upper:]' '[:lower:]')
+          BACKEND_TAG="${{ env.REGISTRY }}/${OWNER}/rag-backend:${VERSION}"
+          FRONTEND_TAG="${{ env.REGISTRY }}/${OWNER}/rag-frontend:${VERSION}"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "image_backend=${BACKEND_TAG}" >> "$GITHUB_OUTPUT"
+          echo "image_frontend=${FRONTEND_TAG}" >> "$GITHUB_OUTPUT"
+          echo "BACKEND_IMAGE_LC=${{ env.REGISTRY }}/${OWNER}/rag-backend" >> "$GITHUB_ENV"
+          echo "FRONTEND_IMAGE_LC=${{ env.REGISTRY }}/${OWNER}/rag-frontend" >> "$GITHUB_ENV"
+          echo "Version: ${VERSION}"
+          echo "Backend: ${BACKEND_TAG}"
+          echo "Frontend: ${FRONTEND_TAG}"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Log in to GHCR
+      - name: Log in to the Container registry
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # ── Backend ──────────────────────────────────────────────────────────────
-      - name: Docker metadata — backend
+      - name: Extract metadata (tags, labels) — backend
         id: meta-backend
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.BACKEND_IMAGE }}
+          images: ${{ env.BACKEND_IMAGE_LC }}
           tags: |
-            type=sha,prefix=,format=short
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+            type=raw,value=${{ steps.version.outputs.version }}
 
-      - name: Build & push backend image
+      - name: Build and push backend image
         uses: docker/build-push-action@v6
         with:
           context: .
           file: RAG/Dockerfile
-          push: ${{ github.event_name == 'push' }}
+          push: true
           tags: ${{ steps.meta-backend.outputs.tags }}
           labels: ${{ steps.meta-backend.outputs.labels }}
           cache-from: type=gha,scope=RAG
           cache-to: type=gha,scope=RAG,mode=max
 
-      # ── Frontend ─────────────────────────────────────────────────────────────
-      - name: Docker metadata — frontend
+      - name: Extract metadata (tags, labels) — frontend
         id: meta-frontend
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.FRONTEND_IMAGE }}
+          images: ${{ env.FRONTEND_IMAGE_LC }}
           tags: |
-            type=sha,prefix=,format=short
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+            type=raw,value=${{ steps.version.outputs.version }}
 
-      - name: Build & push frontend image
+      - name: Build and push frontend image
         uses: docker/build-push-action@v6
         with:
           context: .
           file: UI/Dockerfile
-          push: ${{ github.event_name == 'push' }}
+          push: true
           tags: ${{ steps.meta-frontend.outputs.tags }}
           labels: ${{ steps.meta-frontend.outputs.labels }}
           cache-from: type=gha,scope=UI
           cache-to: type=gha,scope=UI,mode=max
+
+  trigger-deploy:
+    name: Trigger Auto Deploy
+    needs: build-push
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
+
+    steps:
+      - name: Trigger deployment — backend
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.DEPLOY_PAT }}
+          repository: ${{ env.K8S_REPO }}
+          event-type: deploy-image
+          client-payload: |
+            {
+              "service": "${{ env.SERVICE_NAME_BACKEND }}",
+              "version": "${{ needs.build-push.outputs.version }}",
+              "image": "${{ needs.build-push.outputs.image_backend }}",
+              "environment": "staging"
+            }
+
+      - name: Trigger deployment — frontend
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.DEPLOY_PAT }}
+          repository: ${{ env.K8S_REPO }}
+          event-type: deploy-image
+          client-payload: |
+            {
+              "service": "${{ env.SERVICE_NAME_FRONTEND }}",
+              "version": "${{ needs.build-push.outputs.version }}",
+              "image": "${{ needs.build-push.outputs.image_frontend }}",
+              "environment": "staging"
+            }
+
+      - name: Summary
+        run: |
+          echo "### Deployment triggered" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Property | Value |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|----------|-------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Version | ${{ needs.build-push.outputs.version }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Backend image | ${{ needs.build-push.outputs.image_backend }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Frontend image | ${{ needs.build-push.outputs.image_frontend }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Target | staging |" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Monitor deployment in the [K8s config repo](https://github.com/${{ env.K8S_REPO }}/actions)." >> "$GITHUB_STEP_SUMMARY"
