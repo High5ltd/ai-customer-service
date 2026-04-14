@@ -13,6 +13,15 @@ async def test_health_endpoint(client):
 
 
 @pytest.mark.integration
+async def test_metrics_prometheus_exposition(client):
+    response = await client.get("/metrics")
+    assert response.status_code == 200
+    assert "text/plain" in response.headers.get("content-type", "")
+    body = response.text
+    assert "http_requests" in body or "# HELP" in body
+
+
+@pytest.mark.integration
 async def test_list_documents_empty(client):
     response = await client.get("/api/v1/documents")
     assert response.status_code == 200

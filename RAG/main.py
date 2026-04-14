@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 import structlog
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from prometheus_fastapi_instrumentator import Instrumentator
 
 from RAG.api.router import router
 from RAG.config.settings import get_settings
@@ -72,6 +73,12 @@ def create_app() -> FastAPI:
     )
 
     app.include_router(router)
+
+    if settings.metrics_enabled:
+        Instrumentator(
+            excluded_handlers=["/metrics", "/health", "/health/ready"],
+        ).instrument(app).expose(app, endpoint="/metrics", include_in_schema=False)
+
     return app
 
 
