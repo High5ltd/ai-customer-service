@@ -43,6 +43,10 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     cors_origins: str = "http://localhost:5173,http://localhost:3000"
 
+    # Chatwoot (Agent Bot webhook → AI reply). Leave unset to disable sending replies.
+    chatwoot_base_url: str = ""
+    chatwoot_bot_token: str = ""
+
     # RAG
     chunk_size: int = 512
     chunk_overlap: int = 64
