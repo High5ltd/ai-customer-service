@@ -6,11 +6,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from prometheus_fastapi_instrumentator import Instrumentator
 
+from RAG.api.infra_handlers import register_infra_exception_handlers
 from RAG.api.router import router
 from RAG.config.settings import get_settings
-from RAG.db.postgres import close_engine, get_engine
-from RAG.db.qdrant import close_qdrant_client, ensure_collection
-from RAG.db.redis import close_redis_client, get_redis_client
+from RAG.db.postgres import close_engine
+from RAG.db.qdrant import close_qdrant_client
+from RAG.db.redis import close_redis_client
 
 
 def configure_logging(log_level: str) -> None:
@@ -36,12 +37,6 @@ async def lifespan(app: FastAPI):
 
     log = structlog.get_logger()
     log.info("Starting RAG service", port=settings.app_port)
-
-    # Warm up connections
-    get_engine()
-    get_redis_client()
-    await ensure_collection()
-    log.info("All connections ready")
 
     yield
 
@@ -72,6 +67,7 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
+    register_infra_exception_handlers(app)
     app.include_router(router)
 
     Instrumentator(

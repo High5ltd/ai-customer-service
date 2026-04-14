@@ -7,8 +7,9 @@ from qdrant_client.models import PointStruct
 from RAG.config.settings import get_settings
 from RAG.db.models.document import Document
 from RAG.db.postgres import get_session_factory
-from RAG.db.qdrant import get_qdrant_client
+from RAG.db.qdrant import ensure_collection, get_qdrant_client, qdrant_await
 from RAG.db.repositories.document_repo import DocumentRepository
+from RAG.exceptions import InfraUnavailableError
 from RAG.ingestion.chunker import chunk_pages
 from RAG.ingestion.embedder import embed_chunks
 from RAG.ingestion.loader import load_file
@@ -71,6 +72,7 @@ async def ingest_document(
             embedded = await embed_chunks(chunks)
 
             # Upsert into Qdrant
+            await ensure_collection()
             qdrant = get_qdrant_client()
             points = [
                 PointStruct(
@@ -86,15 +88,19 @@ async def ingest_document(
                 )
                 for ec in embedded
             ]
-            await qdrant.upsert(
-                collection_name=settings.qdrant_collection,
-                points=points,
+            await qdrant_await(
+                qdrant.upsert(
+                    collection_name=settings.qdrant_collection,
+                    points=points,
+                )
             )
             log.info("Vectors upserted", doc_id=doc_id, count=len(points))
 
             # Update document status to ready
             doc = await repo.update_status(doc_id, "ready", chunk_count=len(chunks))
 
+        except InfraUnavailableError:
+            raise
         except Exception as exc:
             log.error("Ingestion failed", doc_id=doc_id, error=str(exc))
             doc = await repo.update_status(doc_id, "failed", error_message=str(exc))
@@ -107,10 +113,12 @@ async def delete_document_vectors(doc_id: str) -> None:
     qdrant = get_qdrant_client()
     from qdrant_client.models import FieldCondition, Filter, MatchValue
 
-    await qdrant.delete(
-        collection_name=settings.qdrant_collection,
-        points_selector=Filter(
-            must=[FieldCondition(key="document_id", match=MatchValue(value=doc_id))]
-        ),
+    await qdrant_await(
+        qdrant.delete(
+            collection_name=settings.qdrant_collection,
+            points_selector=Filter(
+                must=[FieldCondition(key="document_id", match=MatchValue(value=doc_id))]
+            ),
+        )
     )
     log.info("Vectors deleted", doc_id=doc_id)

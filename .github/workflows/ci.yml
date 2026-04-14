@@ -2,8 +2,6 @@ name: CI - AI Customer Service
 run-name: ${{ github.event.pull_request.title || 'Deployment' }} ${{ github.ref_name }}
 
 on:
-  push:
-    branches: [main]
   pull_request:
     branches: [main]
     types: [opened, synchronize, reopened, closed]
@@ -22,7 +20,6 @@ jobs:
     runs-on: ubuntu-latest
     if: >-
       github.event_name == 'workflow_dispatch' ||
-      github.event_name == 'push' ||
       github.event.pull_request.merged == true ||
       (github.event_name == 'pull_request' && github.event.action != 'closed')
     permissions:
@@ -32,13 +29,11 @@ jobs:
       rag: >-
         ${{
           github.event_name == 'workflow_dispatch' ||
-          github.event_name == 'push' ||
           steps.filter.outputs.rag == 'true'
         }}
       ui: >-
         ${{
           github.event_name == 'workflow_dispatch' ||
-          github.event_name == 'push' ||
           steps.filter.outputs.ui == 'true'
         }}
     steps:
@@ -68,7 +63,6 @@ jobs:
     runs-on: ubuntu-latest
     if: >-
       github.event_name == 'workflow_dispatch' ||
-      github.event_name == 'push' ||
       github.event.pull_request.merged == true ||
       (github.event_name == 'pull_request' && github.event.action != 'closed')
     steps:
@@ -90,7 +84,6 @@ jobs:
     needs: changes
     if: >-
       (github.event_name == 'workflow_dispatch' ||
-        github.event_name == 'push' ||
         needs.changes.outputs.rag == 'true') &&
       !(github.event_name == 'pull_request' && github.event.action == 'closed')
     strategy:
@@ -129,7 +122,6 @@ jobs:
     needs: changes
     if: >-
       (github.event_name == 'workflow_dispatch' ||
-        github.event_name == 'push' ||
         needs.changes.outputs.ui == 'true') &&
       !(github.event_name == 'pull_request' && github.event.action == 'closed')
     strategy:

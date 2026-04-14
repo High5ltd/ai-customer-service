@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from qdrant_client.models import FieldCondition, Filter, MatchAny
 
 from RAG.config.settings import get_settings
-from RAG.db.qdrant import get_qdrant_client
+from RAG.db.qdrant import get_qdrant_client, qdrant_await
 
 
 @dataclass
@@ -31,12 +31,14 @@ async def search(
             must=[FieldCondition(key="document_id", match=MatchAny(any=document_ids))]
         )
 
-    response = await client.query_points(
-        collection_name=settings.qdrant_collection,
-        query=query_vector,
-        limit=k,
-        query_filter=query_filter,
-        with_payload=True,
+    response = await qdrant_await(
+        client.query_points(
+            collection_name=settings.qdrant_collection,
+            query=query_vector,
+            limit=k,
+            query_filter=query_filter,
+            with_payload=True,
+        )
     )
 
     return [
