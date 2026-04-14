@@ -112,7 +112,10 @@ log_info "Redis is ready"
 
 # ─── Install backend dependencies ─────────────────────────────────────────────
 log_info "Installing backend dependencies..."
-poetry install --no-interaction --quiet
+if ! poetry install --no-interaction; then
+    log_error "poetry install failed (try: poetry lock && poetry install)"
+    exit 1
+fi
 
 # ─── Run Alembic migrations ───────────────────────────────────────────────────
 log_info "Running database migrations..."
