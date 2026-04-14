@@ -5,7 +5,7 @@ export function useDocuments() {
   const store = useDocumentStore()
 
   useEffect(() => {
-    store.fetch()
+    useDocumentStore.getState().fetch()
   }, [])
 
   return store

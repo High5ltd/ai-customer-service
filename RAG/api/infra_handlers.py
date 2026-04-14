@@ -10,9 +10,7 @@ from RAG.exceptions import InfraUnavailableError
 
 log = structlog.get_logger()
 
-_DETAIL = (
-    "Required infrastructure (database, cache, or vector store) is unavailable."
-)
+_DETAIL = "Required infrastructure (database, cache, or vector store) is unavailable."
 
 
 async def _infra_handler(request: Request, exc: Exception) -> JSONResponse:

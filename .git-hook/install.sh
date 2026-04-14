@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# Point git to use git-hook/ as the hooks directory.
-# Run once after cloning: bash git-hook/install.sh
+# Point git to use .git-hook/ as the hooks directory (path is relative to repo root).
+# Run once after cloning: bash .git-hook/install.sh
 
 set -euo pipefail
 
 REPO_ROOT=$(git rev-parse --show-toplevel)
 
-git -C "$REPO_ROOT" config core.hooksPath git-hook
+git -C "$REPO_ROOT" config core.hooksPath .git-hook
 
 # Ensure hook files are executable
-chmod +x "$REPO_ROOT"/git-hook/pre-commit
+chmod +x "$REPO_ROOT"/.git-hook/pre-commit
 
-echo "Git hooks installed — using git-hook/"
+echo "Git hooks installed — core.hooksPath=.git-hook"

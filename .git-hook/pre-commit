@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # pre-commit hook — runs automatically before every commit.
-# Install: bash git-hook/install.sh
+# Install: bash .git-hook/install.sh
 
 set -euo pipefail
 
@@ -32,7 +32,7 @@ fail() { echo -e "${RED}✘ $1${RESET}"; exit 1; }
 section() { echo -e "${CYAN}▶ $1${RESET}"; }
 
 STAGED_PY=$(git diff --cached --name-only --diff-filter=ACM | grep '\.py$' || true)
-STAGED_FE=$(git diff --cached --name-only --diff-filter=ACM | grep '^frontend/.*\.\(ts\|tsx\)$' || true)
+STAGED_UI_TS=$(git diff --cached --name-only --diff-filter=ACM | grep '^UI/.*\.\(ts\|tsx\)$' || true)
 
 # ── Python ────────────────────────────────────────────────────────────────────
 if [ -n "$STAGED_PY" ]; then
@@ -47,10 +47,13 @@ if [ -n "$STAGED_PY" ]; then
   pass "Python checks passed"
 fi
 
-# ── TypeScript ────────────────────────────────────────────────────────────────
-if [ -n "$STAGED_FE" ]; then
-  section "tsc type check"
-  (cd frontend && pnpm tsc --noEmit) || fail "TypeScript errors found — fix them before committing"
+# ── UI (TypeScript / ESLint) ─────────────────────────────────────────────────
+if [ -n "$STAGED_UI_TS" ]; then
+  section "eslint (UI)"
+  (cd UI && pnpm exec eslint src --max-warnings 0) || fail "ESLint failed — run: cd UI && pnpm exec eslint src --fix"
 
-  pass "TypeScript checks passed"
+  section "tsc type check (UI)"
+  (cd UI && pnpm exec tsc --noEmit) || fail "TypeScript errors found — fix them before committing"
+
+  pass "UI checks passed"
 fi

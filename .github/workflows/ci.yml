@@ -17,7 +17,7 @@ env:
 jobs:
   changes:
     name: Check for File Changes
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64]
     if: >-
       github.event_name == 'workflow_dispatch' ||
       github.event.pull_request.merged == true ||
@@ -60,7 +60,7 @@ jobs:
 
   secret-scan:
     name: Secret Scanning
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64]
     if: >-
       github.event_name == 'workflow_dispatch' ||
       github.event.pull_request.merged == true ||
@@ -80,8 +80,11 @@ jobs:
 
   test-rag:
     name: Check (RAG) — ${{ matrix.task.name }}
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64]
     needs: changes
+    env:
+      # conftest imports RAG.main → Settings(); real key not needed for unit tests.
+      OPENAI_API_KEY: sk-ci-placeholder
     if: >-
       (github.event_name == 'workflow_dispatch' ||
         needs.changes.outputs.rag == 'true') &&
@@ -118,7 +121,7 @@ jobs:
 
   test-ui:
     name: Check (UI) — ${{ matrix.task.name }}
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64]
     needs: changes
     if: >-
       (github.event_name == 'workflow_dispatch' ||
@@ -154,14 +157,14 @@ jobs:
   # Gate: build-push không phụ thuộc test (PR merge/closed bỏ qua test giống mẫu)
   deploy-gate:
     name: Deploy Gate
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64]
     if: github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
     steps:
       - run: echo "Ready for build/deploy (merge or manual trigger)"
 
   build-push:
     name: Build and Push Backend (Docker)
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64]
     needs: deploy-gate
     if: github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
     permissions:
@@ -228,7 +231,7 @@ jobs:
   trigger-deploy:
     name: Trigger Auto Deploy
     needs: build-push
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64]
     if: github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
 
     steps:

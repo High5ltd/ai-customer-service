@@ -22,13 +22,11 @@ def get_qdrant_client() -> AsyncQdrantClient:
 def _raise_if_qdrant_transport_error(exc: BaseException) -> None:
     if isinstance(
         exc,
-        (
-            httpx.ConnectError,
-            httpx.ConnectTimeout,
-            httpx.ReadTimeout,
-            httpx.WriteTimeout,
-            httpx.RemoteProtocolError,
-        ),
+        httpx.ConnectError
+        | httpx.ConnectTimeout
+        | httpx.ReadTimeout
+        | httpx.WriteTimeout
+        | httpx.RemoteProtocolError,
     ):
         raise InfraUnavailableError("Vector store (Qdrant) is unavailable.") from exc
 

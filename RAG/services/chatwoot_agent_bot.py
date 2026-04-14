@@ -2,8 +2,8 @@
 Handle Chatwoot Agent Bot webhooks: incoming contact message → LLM → reply via Chatwoot API.
 """
 
-import structlog
 import httpx
+import structlog
 
 from RAG.config.settings import get_settings
 from RAG.services.direct_llm import complete_direct_chat
@@ -49,8 +49,10 @@ def _split_webhook_payload(payload: dict) -> tuple[dict, dict, dict]:
         return message, conversation, account
 
     message = payload
-    conversation = payload.get("conversation") if isinstance(payload.get("conversation"), dict) else {}
-    account = payload.get("account") if isinstance(payload.get("account"), dict) else {}
+    conv = payload.get("conversation")
+    conversation = conv if isinstance(conv, dict) else {}
+    acct = payload.get("account")
+    account = acct if isinstance(acct, dict) else {}
     return message, conversation, account
 
 

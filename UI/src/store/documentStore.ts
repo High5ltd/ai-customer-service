@@ -12,7 +12,7 @@ interface DocumentState {
   remove: (id: string) => Promise<void>
 }
 
-export const useDocumentStore = create<DocumentState>((set, get) => ({
+export const useDocumentStore = create<DocumentState>((set) => ({
   documents: [],
   isLoading: false,
   isUploading: false,
