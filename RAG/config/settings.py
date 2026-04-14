@@ -42,7 +42,6 @@ class Settings(BaseSettings):
     max_file_size_mb: int = 50
     log_level: str = "INFO"
     cors_origins: str = "http://localhost:5173,http://localhost:3000"
-    metrics_enabled: bool = True
 
     # Chatwoot (Agent Bot webhook → AI reply). Leave unset to disable sending replies.
     chatwoot_base_url: str = ""
